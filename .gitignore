@@ -1,8 +1,12 @@
 # Lua
 *.luac
+*.lua.swp
+*.swp
+*.bak
 
 # Env
 .env
+.env.local
 
 # OS
 .DS_Store
