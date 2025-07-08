@@ -1,0 +1,17 @@
+# Lua
+*.luac
+
+# Env
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Neovim Plugin
+*.swp
+*~
+
+# nohup
+nohup.out
