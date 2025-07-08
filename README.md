@@ -60,6 +60,19 @@ docker run -p 8080:8080 --env-file .env jetbrains-proxy
 
 ___
 
+## 🔐 Encrypted Token Storage
+
+You can securely store your JetBrains AI tokens using AES-256 encryption.
+
+1. Run `:JetbrainsAISetup`
+2. When prompted, enter a passphrase to encrypt your tokens
+3. Tokens are stored at `~/.cache/nvim-jetbrainsai/tokens.enc`
+4. On next launch, you’ll be prompted to unlock them
+
+> ⚠️ If you skip encryption, tokens are stored in memory only and will not persist.
+
+___
+
 # 🛡 Legal Compliance
 This plugin does not bundle any JetBrains source code, credentials, or assets. Users must authenticate with their own valid tokens and license. No usage data is transmitted or stored.
 
