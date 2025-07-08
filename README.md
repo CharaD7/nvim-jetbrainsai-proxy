@@ -80,6 +80,24 @@ If you’ve saved encrypted tokens before, the plugin will:
 
 You’ll never be blocked by required input during startup.
 
+### 🔐 Ergonomic Token Loading
+
+This plugin will check for encrypted tokens on startup only if:
+
+- You've previously stored them via `:JetbrainsAISetup`
+- `auto_prompt = true` (default)
+
+Otherwise, it stays silent and clean.
+
+You can disable token auto-load entirely:
+
+```lua
+require("jetbrainsai").setup({
+  auto_prompt = false
+})
+```
+
+You may also logout via: `:JetbrainsAILogout`
 ___
 
 # 🛡 Legal Compliance
