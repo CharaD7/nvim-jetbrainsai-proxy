@@ -1,6 +1,7 @@
 local config = require("jetbrainsai.config").get()
 local proxy = require("jetbrainsai.proxy")
 local chat = require("jetbrainsai.chat")
+local secure = require("jetbrainsai.secure")
 
 local M = {}
 
@@ -16,8 +17,15 @@ end
 local function setup_tokens()
   vim.ui.input({ prompt = "Enter JWT Token:" }, function(jwt)
     vim.ui.input({ prompt = "Enter Bearer Token:" }, function(bearer)
-      proxy.set_tokens(jwt, bearer)
-      vim.notify("✅ Tokens set", vim.log.levels.INFO)
+      vim.ui.input({ prompt = "Encrypt with passphrase (leave blank to skip):" }, function(pass)
+        if pass and #pass > 0 then
+          secure.encrypt_and_store(jwt, bearer, pass)
+          vim.notify("🔐 Tokens encrypted and saved", vim.log.levels.INFO)
+        else
+          proxy.set_tokens(jwt, bearer)
+          vim.notify("⚠️ Tokens stored in memory only", vim.log.levels.WARN)
+        end
+      end)
     end)
   end)
 end
