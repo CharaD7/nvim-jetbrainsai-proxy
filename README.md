@@ -100,6 +100,26 @@ require("jetbrainsai").setup({
 You may also logout via: `:JetbrainsAILogout`
 ___
 
+## 🩺 Health Check
+
+To validate setup, run:
+
+```vim
+:checkhealth nvim-jetbrainsai-proxy
+```
+
+The plugin will check:
+
+- 🔐 Token presence or encryption status
+
+- 🌐 Proxy availability
+
+- 🧰 Required dependencies (curl, openssl)
+
+- 🧠 Neovim version & runtime paths
+
+___
+
 # 🛡 Legal Compliance
 This plugin does not bundle any JetBrains source code, credentials, or assets. Users must authenticate with their own valid tokens and license. No usage data is transmitted or stored.
 
@@ -112,7 +132,7 @@ ___
 
 [x] File write approval workflow
 
-[ ] Token storage with optional encryption
+[x] Token storage with optional encryption
 
 [ ] Custom UI options per theme
 
