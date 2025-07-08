@@ -141,9 +141,9 @@ ___
 ___
 
 # 🤝 Contributing
-Please read CONTRIBUTING.md
+To contribute to this repo, please read [CONTRIBUTING](CONTRIBUTING.md)
 
 ___
 
 # 📜 License
-MIT – See LICENSE
+This project uses the [MIT LICENSE](LICENSE)
