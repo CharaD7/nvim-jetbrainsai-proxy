@@ -128,15 +128,15 @@ This plugin does not bundle any JetBrains source code, credentials, or assets. U
 ___
 
 # ✨ Roadmap
--[x] Chat with JetBrains AI via proxy
+- [x] Chat with JetBrains AI via proxy
 
--[x] File write approval workflow
+- [x] File write approval workflow
 
--[x] Token storage with optional encryption
+- [x] Token storage with optional encryption
 
--[ ] Custom UI options per theme
+- [ ] Custom UI options per theme
 
--[ ] Direct connection to JetBrains Gateway or MCP (optional)
+- [ ] Direct connection to JetBrains Gateway or MCP (optional)
 
 ___
 
