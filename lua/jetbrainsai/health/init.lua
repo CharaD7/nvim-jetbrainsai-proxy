@@ -1,3 +1,6 @@
+-- 👇 Provide the function as part of a table
+local M = {}
+
 local config = require("jetbrainsai.config").get()
 
 local function check_cmd(name, why)
@@ -8,7 +11,7 @@ local function check_cmd(name, why)
   end
 end
 
-return function()
+M.check = function()
   vim.health.start("nvim-jetbrainsai-proxy")
 
   -- 🔐 Token Check
@@ -46,3 +49,4 @@ return function()
   end
 end
 
+return et
