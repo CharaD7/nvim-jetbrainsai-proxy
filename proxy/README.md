@@ -9,5 +9,13 @@ This proxy allows Neovim to connect to JetBrains AI through user-provided sessio
    - Open JetBrains IDE and inspect requests to `ai-chat.jetbrains.com`
    - Copy `Authorization: Bearer ...` and `jb-access-token: ...`
 3. Add to `.env`:
+   - JETBRAINS_BEARER=your-token-here
+   - JETBRAINS_JWT=your-jwt-token-here
+4. Build and run:
+```bash
+docker build -t jbproxy .
+docker run -p 8080:8080 --env-file .env jbproxy
+```
 
+---
 
