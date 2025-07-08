@@ -23,7 +23,7 @@ A blazing-fast, JetBrains AI-compatible Neovim plugin—powered via a secure loc
 
 ```lua
 {
-  "yourgithub/nvim-jetbrainsai-proxy",
+  "CharaD7/nvim-jetbrainsai-proxy",
   dependencies = {
     "folke/noice.nvim",
     "MunifTanjim/nui.nvim",
