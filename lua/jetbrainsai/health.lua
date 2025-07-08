@@ -49,4 +49,4 @@ M.check = function()
   end
 end
 
-return et
+return M
