@@ -1,25 +1,29 @@
 local M = {}
+local config = require("jetbrainsai.config").get()
+local proxy = require("jetbrainsai.proxy")
+local usage = require("jetbrainsai.usage")
+local ui = require("jetbrainsai.ui")
 
-function M.init()
+function M.register()
   vim.api.nvim_create_user_command("JetbrainsAIChat", function()
-    require("jetbrainsai.ui").chat()
+    ui.chat_prompt()
   end, { desc = "Open AI chat prompt" })
 
   vim.api.nvim_create_user_command("JetbrainsAISetup", function()
-    require("jetbrainsai.ui").setup_tokens()
-  end, { desc = "Set JetBrains AI tokens" })
+    ui.setup_tokens()
+  end, { desc = "Set or encrypt JetBrains AI tokens" })
 
   vim.api.nvim_create_user_command("JetbrainsAIUsage", function()
-    require("jetbrainsai.usage").show_plan()
-  end, { desc = "Show usage or plan" })
+    usage.show_plan()
+  end, { desc = "Show plan info or proxy quota hint" })
 
   vim.api.nvim_create_user_command("JetbrainsAILogout", function()
-    local config = require("jetbrainsai.config").get()
     config.jwt = nil
     config.bearer = nil
     config.status = "⚠️"
-    vim.notify("🔒 Tokens cleared from memory", vim.log.levels.INFO)
-  end, { desc = "Clear JetBrains AI tokens from memory" })
+    vim.notify("🔒 JetBrains AI tokens cleared from memory", vim.log.levels.INFO)
+  end, { desc = "Remove in-memory tokens during this session" })
 end
 
 return M
+
