@@ -10,16 +10,17 @@ A blazing-fast, JetBrains AI-compatible Neovim plugin—powered via a secure loc
 
 ## 🚀 Features
 
-- 💬 Interactive JetBrains AI chat in Neovim
-- 📁 Confirmable file and directory creation
-- 🧠 OpenAI-compatible proxy with your JB session
-- 🌈 Catppuccin-themed UI (via Noice)
-- ✅ Token setup UI & visual usage tier display
-- 🔐 Compliant, secure, and community-focused
+- 💬 Chat with JetBrains AI directly in Neovim
+- 📁 Preview and accept file suggestions from the AI
+- 🔐 Store your tokens securely with encrypted local storage
+- 🌐 Connect via a local Docker proxy with user-owned tokens
+- 🎨 Beautiful UI powered by [Noice.nvim](https://github.com/folke/noice.nvim)
+- 🧪 Built-in `:checkhealth` diagnostics
+- ✅ GitHub-friendly repo: secure, compliant, and community-driven
 
 ---
 
-## 🔧 Install (Lazy.nvim)
+# 🔧 Install (Lazy.nvim)
 
 ```lua
 {
@@ -31,7 +32,10 @@ A blazing-fast, JetBrains AI-compatible Neovim plugin—powered via a secure loc
     "nvim-lua/plenary.nvim"
   },
   config = function()
-    require("jetbrainsai").setup()
+    require("jetbrainsai").setup({
+      -- Optional: Disable auto token prompt
+      auto_prompt = true,
+    })
   end
 }
 ```
@@ -39,33 +43,71 @@ A blazing-fast, JetBrains AI-compatible Neovim plugin—powered via a secure loc
 ___
 
 # 🧑‍💻 Setup
-Run the Proxy
 
-Open Neovim and run `:JetbrainsAISetup`
+During setup, you'll be prompted to enter your:
 
-Start chatting with `<leader>jc`
+- `JetBrains JWT` token
 
-All actions are available via keymaps and commands
+- `JetBrains Bearer` token
 
-___
+- _(Optional)_ Encryption passphrase to securely store these credentials
 
-# 🐳 Run the Proxy
+> 🛡️ You are solely responsible for providing your own tokens. This plugin does not bypass or spoof any licensing or authentication.
+
+To retrieve your valid tokens, you'll need to run the proxy locally, authenticated with your JetBrains session.
+
+___ 
+## 🐳 Running the Proxy (To Acquire Tokens)
+
+Jetbrains AI credentials must be extracted from your own session using the official IDE. This plugin does not ship with authentication,
+and you will need your own tokens to connect.
+
+__Step 1:__ Clone the repo and navigate to the proxy directory.
 
 ```bash
-cd proxy
-cp .env.example .env
+git clone https://github.com/CharaD7/nvim-jetbrainsai-proxy.git
+
+cd nvim-jetbrainsai-proxy/proxy
+```
+
+__Step 2:__ Copy the env file `cp .env.example .env`
+
+__Step 3:__ Open any Jetbrains IDE and initiate the AI chat.
+
+__Step 4:__ Use browser DevTools to inspect a network request to `ai-chat.jetbrains.com`
+
+__Step 5:__ Extract the key information:
+
+- `Authorization: Bearer ...`
+- `jb-access-token: ...`
+
+__Step 6:__ Fill in the `.env` like so:
+
+```bash
+JETBRAINS_BEARER=<your_authorization_token>
+JETBRAINS_JWT=<your_jwt_here>
+PORT=8080
+```
+
+
+__Step 7:__ Start the proxy
+
+```bash
 docker build -t jetbrains-proxy .
 docker run -p 8080:8080 --env-file .env jetbrains-proxy
 ```
 
 ___
 
-## 🔐 Encrypted Token Storage
+## 🔐 Encrypted Token Setup and Storage
 
 You can securely store your JetBrains AI tokens using AES-256 encryption.
 
 1. Run `:JetbrainsAISetup`
-2. When prompted, enter a passphrase to encrypt your tokens
+2. When prompted, enter a 
+  - JWT token
+  - Bearer token
+  - (Optional) passphrase to encrypt your tokens
 3. Tokens are stored at `~/.cache/nvim-jetbrainsai/tokens.enc`
 
 > ⚠️ If you skip encryption, tokens are stored in memory only and will not persist.
@@ -100,6 +142,16 @@ require("jetbrainsai").setup({
 You may also logout via: `:JetbrainsAILogout`
 ___
 
+# 💻 Keybindings
+
+| Mode | Mapping | Action |
+|----|----|----|
+| `n` | `<leader>jc` | Start chat prompt |
+| `n` | `<leader>js` | Setup tokens (store or encrypt) |
+| `n` | `<leader>jl` | Logout (clear memory-stored tokens) |
+
+___
+
 ## 🩺 Health Check
 
 To validate setup, run:
@@ -121,13 +173,19 @@ The plugin will check:
 ___
 
 # 🛡 Legal Compliance
-This plugin does not bundle any JetBrains source code, credentials, or assets. Users must authenticate with their own valid tokens and license. No usage data is transmitted or stored.
 
+This plugin does not bundle any JetBrains source code, credentials, or assets. Users must authenticate with their own valid tokens and license. No usage data is transmitted or stored.
   > ⚠️ Use of the JetBrains API via proxy is for educational and non-commercial use only. We recommend this plugin be run locally and by licensed users.
+
+- All API calls use your local, user-authenticated proxy
+- Tokens are never transmitted to third parties or stored by this plugin
+- Users are expected to comply with Jetbrains' [Terms of Use](https://www.jetbrains.com/legal/terms/) and [Privacy Policy](https://www.jetbrains.com/legal/privacy-policy/)
 
 ___
 
 # ✨ Roadmap
+
+View ongoing work and feature proposals under the [Discussions](https://github.com/CharaD7/nvim-jetbrainsai-proxy/discussions) tab.
 - [x] Chat with JetBrains AI via proxy
 
 - [x] File write approval workflow
