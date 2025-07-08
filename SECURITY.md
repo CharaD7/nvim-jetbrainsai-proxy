@@ -1,5 +1,15 @@
 # 🔐 Security Policy
 
+## Token Storage
+
+This plugin supports optional encrypted token storage using AES-256. Tokens are never transmitted or stored remotely. Users may opt out and store tokens in memory only.
+
+## Encryption Details
+
+- Algorithm: AES-256-CBC
+- Storage path: `~/.cache/nvim-jetbrainsai/tokens.enc`
+- Passphrase: User-defined, not stored
+
 ## Supported Versions
 
 | Version | Supported |
