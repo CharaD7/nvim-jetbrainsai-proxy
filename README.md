@@ -74,7 +74,7 @@ __Step 2:__ Copy the env file `cp .env.example .env`
 
 __Step 3:__ Open any Jetbrains IDE and initiate the AI chat.
 
-__Step 4:__ Use browser DevTools to inspect a network request to `ai-chat.jetbrains.com`
+__Step 4:__ Use IDE DevTools plugin to inspect a network request to Jetbrains AI chat
 
 __Step 5:__ Extract the key information:
 
