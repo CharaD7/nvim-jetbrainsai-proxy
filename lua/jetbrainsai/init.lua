@@ -4,26 +4,29 @@ function M.setup(opts)
   local config = require("jetbrainsai.config")
   local proxy = require("jetbrainsai.proxy")
   local ui = require("jetbrainsai.ui")
+  local secure = require("jetbrainsai.secure")
 
   config.load(opts)
 
-  -- 🔐 Attempt to unlock encrypted tokens (optional on boot)
+  -- 🔐 Ergonomic: only ask if encrypted token file exists
   vim.defer_fn(function()
-    vim.ui.input({ prompt = "🔐 Enter passphrase to unlock JetBrains AI tokens:" }, function(pass)
-      if pass and #pass > 0 then
-        local secure = require("jetbrainsai.secure")
-        local tokens = secure.load_tokens(pass)
-        if tokens then
-          proxy.set_tokens(tokens.jwt, tokens.bearer)
-          vim.notify("✅ Encrypted tokens loaded", vim.log.levels.INFO)
+    local path = vim.fn.stdpath("cache") .. "/nvim-jetbrainsai/tokens.enc"
+    if vim.fn.filereadable(path) == 1 then
+      vim.ui.input({ prompt = "🔐 Unlock JetBrains AI (optional):" }, function(pass)
+        if pass and #pass > 0 then
+          local tokens = secure.load_tokens(pass)
+          if tokens then
+            proxy.set_tokens(tokens.jwt, tokens.bearer)
+            vim.notify("🔓 Tokens unlocked", vim.log.levels.INFO)
+          else
+            vim.notify("❌ Invalid passphrase", vim.log.levels.ERROR)
+          end
         else
-          vim.notify("❌ Could not decrypt stored tokens", vim.log.levels.ERROR)
+          vim.notify("⏭️ Skip: Tokens not loaded", vim.log.levels.WARN)
         end
-      else
-        vim.notify("⚠️ No passphrase entered: tokens not loaded", vim.log.levels.WARN)
-      end
-    end)
-  end, 500) -- slight delay after startup for smoother UX
+      end)
+    end
+  end, 300) -- short delay for smooth UI experience
 
   proxy.check_proxy()
   ui.init()
