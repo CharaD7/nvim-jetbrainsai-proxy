@@ -25,6 +25,8 @@ This plugin supports optional encrypted token storage using AES-256. Tokens are 
 | Version | Supported |
 | ------- | --------- |
 | 1.0.0   | ✅         |
+| 1.0.1   | ✅         |
+| 1.0.2   | ✅         |
 
 ## Responsible Use
 
