@@ -4,6 +4,16 @@
 
 This plugin supports optional encrypted token storage using AES-256. Tokens are never transmitted or stored remotely. Users may opt out and store tokens in memory only.
 
+## Token Loading Behavior
+
+- Tokens stored in memory can be cleared via `:JetbrainsAILogout`
+- Auto-loading can be toggled in config: `auto_prompt = false`
+- User status icons: 
+  - 🔐 locked/encrypted
+  - 🔓 unlocked
+  - ⚠️ not set
+  - ❌ error
+
 ## Encryption Details
 
 - Algorithm: AES-256-CBC
