@@ -67,9 +67,18 @@ You can securely store your JetBrains AI tokens using AES-256 encryption.
 1. Run `:JetbrainsAISetup`
 2. When prompted, enter a passphrase to encrypt your tokens
 3. Tokens are stored at `~/.cache/nvim-jetbrainsai/tokens.enc`
-4. On next launch, you’ll be prompted to unlock them
 
 > ⚠️ If you skip encryption, tokens are stored in memory only and will not persist.
+
+### 🧠 Smart Token Loading
+
+If you’ve saved encrypted tokens before, the plugin will:
+
+- Detect the token file on startup
+- Prompt you once to enter your passphrase (optional)
+- Skip completely if no token is saved or prompt is canceled
+
+You’ll never be blocked by required input during startup.
 
 ___
 
