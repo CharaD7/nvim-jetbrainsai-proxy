@@ -21,7 +21,7 @@ A blazing-fast, JetBrains AI-compatible Neovim plugin—powered via a secure loc
 
 ---
 
-# 🔧 Install (Lazy.nvim)
+# 🔧 Install with (Lazy.nvim)
 
 ```lua
 {
@@ -71,7 +71,15 @@ git clone https://github.com/CharaD7/nvim-jetbrainsai-proxy.git
 cd nvim-jetbrainsai-proxy/proxy
 ```
 
-__Step 2:__ Copy the env file `cp .env.example .env`
+__Step 2:__ Install dependencies and validate your setup
+
+```bash
+pip install -r requirements.txt  # If you list any
+make verify
+make bootstrap
+```
+
+> __NB:__ You will need docker or podman for this to work for you.
 
 __Step 3:__ Open any Jetbrains IDE and initiate the AI chat.
 
@@ -82,12 +90,12 @@ __Step 5:__ Extract the key information:
 - `Authorization: Bearer ...`
 - `jb-access-token: ...`
 
-__Step 6:__ Fill in the `.env` like so:
+__Step 6:__ Fill in the `config.yaml` like so:
 
 ```bash
-JETBRAINS_BEARER=<your_authorization_token>
-JETBRAINS_JWT=<your_jwt_here>
-PORT=8080
+tokens:
+  - jwt: "<your-grazie-authentication-jwt>"
+  bearer: "<your_bearer_here>" # can be blank
 ```
 
 
@@ -95,7 +103,7 @@ __Step 7:__ Start the proxy
 
 ```bash
 docker build -t jetbrains-proxy .
-docker run -p 8080:8080 --env-file .env jetbrains-proxy
+docker run -p 8080:8080 jetbrains-proxy
 ```
 
 ___
@@ -170,6 +178,22 @@ The plugin will check:
 - 🧰 Required dependencies (curl, openssl)
 
 - 🧠 Neovim version & runtime paths
+
+___
+
+# 🙋 FAQ
+
+**Q: Where do I get my JetBrains tokens?**  
+A: Run mitmproxy and route IDE traffic through it. Look for `grazie-authenticate-jwt` in the headers on `/chat/stream` calls.
+
+**Q: Why is my token not working?**  
+A: It's likely expired or missing required scopes. Try triggering a new AI interaction in WebStorm or IntelliJ.
+
+**Q: How do I avoid committing secrets?**  
+A: Use `.env` + `make gen-config`. We've already `.gitignore`d `config.yaml` for safety.
+
+**Q: Can I contribute a plugin for VS Code/other editors?**  
+A: Absolutely! PRs welcome if they route via this proxy.
 
 ___
 

@@ -99,6 +99,57 @@ Pull requests are welcome for:
 - Support for rotating token stores
 - IDE-native token fetchers
 
+## 🧠 Contributor Onboarding
+
+New here? Follow these steps:
+
+1. Copy `config.example.yaml` → `config.yaml`
+2. Populate it with a JetBrains-issued `grazie-authenticate-jwt`
+3. Run:
+
+```bash
+make verify
+make run
+```
+
+> Optional: Use `make gen-config` if you prefer storing your token in a `.env` file.
+
+---
+
+## 🔄 Dev Cycle
+
+| Action             | Command               |
+|--------------------|------------------------|
+| Validate config    | `make verify`          |
+| Build proxy        | `make build`           |
+| Run proxy          | `make run`             |
+| Test LLM endpoint  | `make test-proxy`      |
+| Start mitmproxy    | `make mitmproxy`       |
+| Auto-check config  | `dev/bootstrap.sh`     |
+
+All builds respect `Podman` if installed, falling back to `Docker` automatically.
+
+___
+
+# 🔐 Security Hygiene
+
+- Never commit your real token or unencrypted `config.yaml`
+- Always use `.env` + `make gen-config` for local setup
+- CI will block builds if the config file is missing, malformed, or ignored by the Dockerfile
+
+___
+
+# 📦 Releasing New Versions
+
+After merging stable changes:
+
+```bash
+git tag -a vX.Y.Z -m "Version X.Y.Z"
+git push origin vX.Y.Z
+```
+
+Then create a GitHub Release and copy changes from [CHANGELOG.md](CHANGELOG.md)
+
 ___
 
 # ✨ Inspiration

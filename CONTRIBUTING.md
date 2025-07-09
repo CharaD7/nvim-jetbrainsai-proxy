@@ -16,9 +16,16 @@ Thanks for your interest in contributing! Here's how to get started:
 
 ## 🧪 Running Locally
 
-1. Clone repo
-2. Run proxy: `docker-compose up` or `docker build && docker run ...`
-3. Install plugin in Neovim with packer/lazy
+1. Copy `config.example.yaml` → `config.yaml`
+2. Populate it with a JetBrains-issued `grazie-authenticate-jwt`
+3. Run:
+
+```bash
+make verify
+make run
+```
+
+4. Install plugin in Neovim with packer/lazy
 
 ## ✅ Making a Pull Request
 
@@ -36,5 +43,4 @@ Use the GitHub issue templates for:
 
 ## 💬 Questions?
 
-Open a Discussion or ping @joyancek!
-
+Open a Discussion or ping [@CharaD7](https://github.com/CharaD7)!
