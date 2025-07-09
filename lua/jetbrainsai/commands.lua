@@ -23,6 +23,10 @@ function M.register()
     config.status = "⚠️"
     vim.notify("🔒 JetBrains AI tokens cleared from memory", vim.log.levels.INFO)
   end, { desc = "Remove in-memory tokens during this session" })
+
+  vim.api.nvim_create_user_command("JetbrainsAIHistory", function()
+    require("jetbrainsai.history_view").open()
+  end, { desc = "Open chat history" })
 end
 
 return M
