@@ -1,12 +1,15 @@
-FROM node:20-alpine
+FROM docker.io/library/golang:1.24-alpine
 
 WORKDIR /app
 
 RUN apk add --no-cache git && \
     git clone https://github.com/zouyq/jetbrains-ai-proxy.git . && \
-    npm install
+    go build -o jetbrains-ai-proxy main.go
 
-COPY .env .env
+COPY config.yaml ./config.yaml
 
-CMD ["npm", "run", "start"]
+EXPOSE 8080
+
+CMD ["./jetbrains-ai-proxy", "--config", "./config.yaml"]
+
 
