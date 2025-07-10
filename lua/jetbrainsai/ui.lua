@@ -77,23 +77,31 @@ function M.chat_prompt()
     end))
   end
 
-  local function send_prompt()
-    local line = vim.api.nvim_buf_get_lines(bufnr, input_row + 1, input_row + 2, false)[1] or ""
-    local prompt = line:gsub("^%s*>%s*", "")
-    if prompt == "" then return end
+local function send_prompt()
+  local line = vim.api.nvim_buf_get_lines(bufnr, input_row + 1, input_row + 2, false)[1] or ""
+  local prompt = line:gsub("^%s*>%s*", "")
+  if prompt == "" then return end
 
-    chat.send(prompt, function(reply)
-      last_response = reply
-      threads.append(prompt, reply)
-      vim.bo[bufnr].syntax = "markdown"
-
-      vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, { "⏳ Thinking..." })
-      stream_response(reply, prompt)
-
-      vim.api.nvim_buf_set_lines(bufnr, input_row + 1, input_row + 2, false, { "> " })
-      vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
-    end)
+  local tokens = proxy.get_tokens and proxy.get_tokens() or { jwt = config.jwt, bearer = config.bearer }
+  if not tokens or not tokens.jwt or not tokens.bearer then
+    vim.notify("🔑 Tokens not loaded. Please run :JetbrainsAISetup", vim.log.levels.ERROR)
+    return
   end
+
+  proxy.find_proxy() -- ensures proxy_url is valid
+
+  chat.send(prompt, function(reply)
+    last_response = reply
+    threads.append(prompt, reply)
+    vim.bo[bufnr].syntax = "markdown"
+
+    vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, { "⏳ Thinking..." })
+    stream_response(reply, prompt)
+
+    vim.api.nvim_buf_set_lines(bufnr, input_row + 1, input_row + 2, false, { "> " })
+    vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
+  end)
+end
 
   local function accept()
     if last_response ~= "" then

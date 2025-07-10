@@ -11,6 +11,21 @@ local config = {
   status = "⚠️", -- Will be updated when tokens are loaded
 }
 
+local cache_file = vim.fn.stdpath("data") .. "/jetbrainsai_proxy.json"
+
+function config.load_cached_proxy()
+  if vim.fn.filereadable(cache_file) == 1 then
+    local data = vim.fn.json_decode(vim.fn.readfile(cache_file))
+    if data and data.proxy_url then
+      config.proxy_url = data.proxy_url
+    end
+  end
+end
+
+function config.save_proxy(proxy_url)
+  vim.fn.writefile({ vim.fn.json_encode({ proxy_url = proxy_url }) }, cache_file)
+end
+
 return {
   load = function(user_opts)
     config = vim.tbl_deep_extend("force", config, user_opts or {})
