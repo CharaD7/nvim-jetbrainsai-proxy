@@ -8,14 +8,22 @@ local edits = require("jetbrainsai.edits")
 local M = {}
 local last_response = ""
 
--- Highlights
+local spinner_frames = { "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔" }
+local ns = vim.api.nvim_create_namespace("jetbrainsai-ui")
+
+-- Styling groups
 vim.api.nvim_set_hl(0, "JBHeader", { fg = "#89b4fa", bold = true })
 vim.api.nvim_set_hl(0, "JBAction", { fg = "#a6e3a1", italic = true })
 vim.api.nvim_set_hl(0, "JBPrompt", { fg = "#f9e2af", italic = true })
 vim.api.nvim_set_hl(0, "JBStream", { fg = "#cba6f7" })
 
--- Emoji spinner
-local spinner_frames = { "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔" }
+local function suggest_followups(prompt)
+  return {
+    "💡 Expand this idea",
+    "📚 Explain each step",
+    "🔁 Rewrite using different model"
+  }
+end
 
 function M.chat_prompt()
   vim.cmd("vsplit")
@@ -26,55 +34,31 @@ function M.chat_prompt()
   vim.api.nvim_win_set_buf(win, bufnr)
   vim.wo[win].wrap = true
   vim.bo[bufnr].filetype = "jetbrainsai"
+  vim.bo[bufnr].modifiable = true
 
-  local lines = {
-    "💡 JetBrains AI Assistant 🚀",
+  local input_row = 9
+  local header_lines = {
+    "💡 JetBrains AI Assistant ✨",
     "────────────────────────────────────",
     "📦 Model: " .. (config.model or "gpt-4"),
     "📊 Quota: " .. (config.quota or "untracked"),
     "",
-    "🧠 [Send]   ✅ [Accept]   ❌ [Deny]",
+    "", -- placeholder for clickable buttons
     "",
     "💬 Prompt:",
     "",
-    "> ", -- editable line
+    "> ",
     "",
     "🧠 Response:"
   }
 
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  local ns = vim.api.nvim_create_namespace("jb-ai")
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, header_lines)
   vim.highlight.range(bufnr, ns, "JBHeader", {0, 0}, {0, -1})
-  vim.highlight.range(bufnr, ns, "JBAction", {5, 0}, {5, -1})
   vim.highlight.range(bufnr, ns, "JBPrompt", {9, 0}, {9, -1})
 
-  local input_row = 9
   vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
 
-  local function stream_response(bufnr, start, data)
-    local lines = vim.split(data, "\n")
-    local i = 0
-    local frame = 1
-
-    local timer = vim.loop.new_timer()
-    timer:start(0, 60, vim.schedule_wrap(function()
-      if i >= #lines then
-        timer:stop()
-        timer:close()
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "🔔 All done! 🎯" })
-        return
-      end
-
-      local prefix = spinner_frames[frame]
-      local line = prefix .. " " .. lines[i + 1]
-      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { line })
-      vim.api.nvim_buf_add_highlight(bufnr, ns, "JBStream", start + i, 0, -1)
-
-      i = i + 1
-      frame = (frame % #spinner_frames) + 1
-    end))
-  end
-
+  -- Core actions
   local function send_prompt()
     local line = vim.api.nvim_buf_get_lines(bufnr, input_row + 1, input_row + 2, false)[1] or ""
     local prompt = line:gsub("^%s*>%s*", "")
@@ -83,12 +67,31 @@ function M.chat_prompt()
     chat.send(prompt, function(reply)
       last_response = reply
       threads.append(prompt, reply)
+      vim.bo[bufnr].syntax = "markdown"
+      vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, { "⏳ Thinking..." })
 
-      local start_line = input_row + 3
-      vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, { "⏳ Thinking..." })
-      stream_response(bufnr, start_line, reply)
+      -- Animate response
+      local lines = vim.split(reply, "\n")
+      local i, frame = 0, 1
+      local timer = vim.loop.new_timer()
+      timer:start(0, 60, vim.schedule_wrap(function()
+        if i >= #lines then
+          timer:stop()
+          timer:close()
+          local ups = suggest_followups(prompt)
+          vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {
+            "", "🔮 Follow-ups:", ups[1], ups[2], ups[3], "", "🔔 Done! 🎯"
+          })
+          return
+        end
+        local line = spinner_frames[frame] .. " " .. lines[i + 1]
+        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { line })
+        vim.api.nvim_buf_add_highlight(bufnr, ns, "JBStream", input_row + 3 + i, 0, -1)
+        i = i + 1
+        frame = (frame % #spinner_frames) + 1
+      end))
 
-      -- Clear input
+      -- Clear prompt
       vim.api.nvim_buf_set_lines(bufnr, input_row + 1, input_row + 2, false, { "> " })
       vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
     end)
@@ -106,7 +109,21 @@ function M.chat_prompt()
     vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, { "❌ Response cleared." })
   end
 
-  -- 🎛 Keymaps
+  -- 📌 Extmarks for mouse-triggered buttons
+  local function mark_action(label, col, action)
+    vim.api.nvim_buf_set_extmark(bufnr, ns, 5, col, {
+      virt_text = { { label, "JBAction" } },
+      virt_text_pos = "overlay",
+      hl_mode = "combine",
+      mouse_callback = function(_, _, _) action() end
+    })
+  end
+
+  mark_action("[Send]", 0, send_prompt)
+  mark_action("[Accept]", 10, accept)
+  mark_action("[Deny]", 20, deny)
+
+  -- Keyboard triggers
   vim.keymap.set("n", "<CR>", send_prompt, { buffer = bufnr })
   vim.keymap.set("i", "<C-s>", function()
     vim.api.nvim_input("<Esc>")
