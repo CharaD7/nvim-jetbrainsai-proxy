@@ -1,6 +1,6 @@
 local M = {}
 
-function M.setup(opts)
+M.init = function(opts)
   local config_mod = require("jetbrainsai.config")
   local proxy = require("jetbrainsai.proxy")
   local ui = require("jetbrainsai.ui")
