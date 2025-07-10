@@ -33,7 +33,7 @@ function M.setup(opts)
     end
   end, 300)
 
-  proxy.check_proxy()
+  proxy.find_proxy()
   ui.init()
   commands.register()
 end
