@@ -4,130 +4,90 @@ local chat = require("jetbrainsai.chat")
 local secure = require("jetbrainsai.secure")
 local threads = require("jetbrainsai.threads")
 local edits = require("jetbrainsai.edits")
-local NuiPopup = require("nui.popup")
-local NuiInput = require("nui.input")
-local NuiMenu = require("nui.menu")
-local NuiLine = require("nui.line")
-local event = require("nui.utils.autocmd")
 
 local M = {}
 
-vim.api.nvim_set_hl(0, "JetBrainsAccept", { fg = "#00FF00", bold = true })
-vim.api.nvim_set_hl(0, "JetBrainsDeny", { fg = "#FF4444", bold = true })
-vim.api.nvim_set_hl(0, "JetBrainsTitle", { fg = "#aaaaff", italic = true })
-
 local last_response = ""
 
-local function animate(bufnr, lines)
-  local delay = 30
-  local i = 0
-  local timer = vim.loop.new_timer()
-  timer:start(0, delay, vim.schedule_wrap(function()
-    if i >= #lines then
-      timer:stop()
-      timer:close()
-      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "", "🟢 Response complete." })
-      return
-    end
-    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { lines[i + 1] })
-    i = i + 1
-  end))
-end
-
-local function open_model_menu(update_model)
-  local menu = NuiMenu({
-    position = "50%",
-    size = { width = 30, height = 5 },
-    border = { style = "single", text = { top = " Choose Model ", top_align = "center" } },
-  }, {
-    lines = {
-      NuiMenu.item("gpt-4"),
-      NuiMenu.item("gpt-3.5"),
-      NuiMenu.item("code-llm"),
-    },
-    on_submit = function(item)
-      config.model = item.text
-      update_model(item.text)
-    end,
-  })
-  menu:mount()
-end
+-- Highlight groups
+vim.api.nvim_set_hl(0, "JetBrainsTitle", { fg = "#aaaaff", bold = true })
+vim.api.nvim_set_hl(0, "JetBrainsAccept", { fg = "#00FF00", bold = true })
+vim.api.nvim_set_hl(0, "JetBrainsDeny", { fg = "#FF4444", bold = true })
 
 function M.chat_prompt()
-  local popup = NuiPopup({
-    enter = true,
-    focusable = true,
-    position = "50%",
-    size = { width = "50%", height = "100%" },
-    border = { style = "rounded", text = { top = " JetBrains AI ", top_align = "center" } },
-    buf_options = { filetype = "jetbrainsai" },
-  })
+  vim.cmd("vsplit")
+  local win = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(win, bufnr)
+  vim.bo[bufnr].filetype = "jetbrainsai"
+  vim.bo[bufnr].modifiable = true
+  -- After creating window and buffer:
+  vim.bo[bufnr].wrap = true
+  vim.bo[bufnr].syntax = "markdown"
+  vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
+  vim.highlight.range(bufnr, ns, "JetBrainsPrompt", {input_row, 0}, {input_row, -1})
 
-  popup:mount()
-  local bufnr = popup.bufnr
-
-  local header = NuiLine()
-  header:append("🧠 Model: ", "JetBrainsTitle")
-  header:append(config.model or "gpt-4", "Identifier")
-  header:append("    📊 Quota: ", "JetBrainsTitle")
-  header:append(config.quota or "untracked", "Identifier")
-  popup:render_line(0, header)
-
-  vim.api.nvim_buf_set_lines(bufnr, 1, 4, false, {
-    "──────────────────────────────",
-    "[ Select Model ]",
+  local lines = {
+    "🧠 Model: " .. (config.model or "gpt-4"),
+    "📊 Quota: " .. (config.quota or "untracked"),
+    "────────────────────────────────────────────",
+    "[ Send ]    [ Accept ]    [ Deny ]",
     "",
-    "[🟩 Accept]    [🟥 Deny]",
+    "💬 Prompt:",
     "",
-    "💬 Prompt ↓"
-  })
+    "> ", -- Prompt input line (editable!)
+    "",
+    "🧠 Response:",
+  }
 
-  vim.api.nvim_buf_add_highlight(bufnr, -1, "JetBrainsAccept", 4, 0, 9)
-  vim.api.nvim_buf_add_highlight(bufnr, -1, "JetBrainsDeny", 4, 15, 23)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local input = NuiInput({
-    position = { row = 6, col = 2 },
-    size = { width = 40 },
-    border = { style = "single", text = { top = " Prompt ", top_align = "left" } },
-  }, {
-    prompt = "> ",
-    default_value = "",
-    on_submit = function(msg)
-      if msg == "" then return end
-      chat.send(msg, function(reply)
-        last_response = reply
-        local lines = vim.split(reply, "\n")
-        vim.api.nvim_buf_set_lines(bufnr, 8, -1, false, { "", "🧠 Response:" })
-        animate(bufnr, lines)
-      end)
-    end,
-  })
-  input:mount()
+  -- Highlights using modern API
+  local ns = vim.api.nvim_create_namespace("jetbrainsai-ui")
+  vim.highlight.range(bufnr, ns, "JetBrainsTitle", { 0, 0 }, { 0, -1 })
+  vim.highlight.range(bufnr, ns, "JetBrainsAccept", { 3, 13 }, { 3, 22 })
+  vim.highlight.range(bufnr, ns, "JetBrainsDeny", { 3, 27 }, { 3, 34 })
 
-  -- Dynamic model selector
-  vim.keymap.set("n", "m", function()
-    open_model_menu(function(new_model)
-      local line = NuiLine()
-      line:append("🧠 Model: ", "JetBrainsTitle")
-      line:append(new_model, "Identifier")
-      popup:render_line(0, line)
+  -- Track where prompt input lives
+  local input_row = 7
+
+  local function send_prompt()
+    local line = vim.api.nvim_buf_get_lines(bufnr, input_row, input_row + 1, false)[1]
+    local prompt = line:gsub("^%s*>%s*", "")
+    if prompt == "" then
+      return
+    end
+
+    chat.send(prompt, function(reply)
+      last_response = reply
+      local response_lines = vim.split(reply, "\n")
+      local start_line = input_row + 3
+      vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, response_lines)
     end)
-  end, { buffer = bufnr })
+  end
 
-  -- Accept/Inject response
-  vim.keymap.set("n", "<CR>", function()
-    if last_response ~= "" then edits.inject_response(last_response) end
-    popup:unmount()
-  end, { buffer = bufnr })
+  local function accept()
+    if last_response ~= "" then
+      edits.inject_response(last_response)
+      vim.notify("✅ Accepted", vim.log.levels.INFO)
+    end
+  end
 
-  -- Reject
-  vim.keymap.set("n", "q", function()
+  local function deny()
     edits.reject()
-    popup:unmount()
+    vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, {})
+  end
+
+  -- Keymap: <CR> sends prompt in normal & insert mode
+  vim.keymap.set("n", "<CR>", send_prompt, { buffer = bufnr })
+  vim.keymap.set("i", "<CR>", function()
+    vim.api.nvim_input("<Esc>")
+    vim.schedule(send_prompt)
   end, { buffer = bufnr })
 
-  -- Auto close on buffer leave
-  event.on("BufLeave", bufnr, function() popup:unmount() end)
+  -- Accept/Deny via keymap
+  vim.keymap.set("n", "<leader>ja", accept, { buffer = bufnr })
+  vim.keymap.set("n", "<leader>jd", deny, { buffer = bufnr })
 end
 
 function M.setup_tokens()
@@ -154,7 +114,7 @@ function M.logout_tokens()
 end
 
 function M.init()
-  vim.keymap.set("n", config.chat_key, M.chat_prompt, { desc = "JetBrains AI Chat Pane" })
+  vim.keymap.set("n", config.chat_key, M.chat_prompt, { desc = "JetBrains AI: Chat Split" })
   vim.keymap.set("n", config.setup_key, M.setup_tokens, { desc = "Setup Tokens" })
   vim.keymap.set("n", config.logout_key, M.logout_tokens, { desc = "Clear Tokens" })
 
@@ -164,4 +124,3 @@ function M.init()
 end
 
 return M
-
