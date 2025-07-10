@@ -1,6 +1,6 @@
 local M = {}
 
-M.init = function(opts)
+M.setup = function(opts)
   local config_mod = require("jetbrainsai.config")
   local proxy = require("jetbrainsai.proxy")
   local ui = require("jetbrainsai.ui")
@@ -10,7 +10,6 @@ M.init = function(opts)
   config_mod.load(opts)
   local config = config_mod.get()
 
-  -- 🔐 Optional secure token loader if enabled and encrypted token file exists
   vim.defer_fn(function()
     if not config.auto_prompt then return end
     local token_path = vim.fn.stdpath("cache") .. "/nvim-jetbrainsai/tokens.enc"
