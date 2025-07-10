@@ -134,6 +134,38 @@ end
 end
 
 -- unchanged setup/logout/init functions here...
+function M.setup_tokens()
+  vim.ui.input({ prompt = "Enter JWT Token:" }, function(jwt)
+    vim.ui.input({ prompt = "Enter Bearer Token:" }, function(bearer)
+      vim.ui.input({ prompt = "Encrypt with passphrase (optional):" }, function(pass)
+        if pass and #pass > 0 then
+          secure.encrypt_and_store(jwt, bearer, pass)
+          vim.notify("🔐 Tokens encrypted", vim.log.levels.INFO)
+        else
+          proxy.set_tokens(jwt, bearer)
+          vim.notify("⚠️ Tokens stored in memory", vim.log.levels.WARN)
+        end
+      end)
+    end)
+  end)
+end
+
+function M.logout_tokens()
+  config.jwt = nil
+  config.bearer = nil
+  threads.clear()
+  vim.notify("🔒 Tokens cleared", vim.log.levels.INFO)
+end
+
+function M.init()
+  vim.keymap.set("n", config.chat_key, M.chat_prompt, { desc = "JetBrains AI: Chat Split" })
+  vim.keymap.set("n", config.setup_key, M.setup_tokens, { desc = "Setup Tokens" })
+  vim.keymap.set("n", config.logout_key, M.logout_tokens, { desc = "Clear Tokens" })
+
+  vim.api.nvim_create_user_command("JetbrainsAIHistory", function()
+    require("jetbrainsai.history_view").open()
+  end, {})
+end
 
 return M
 
