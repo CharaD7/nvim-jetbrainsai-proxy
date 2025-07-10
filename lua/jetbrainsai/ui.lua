@@ -6,86 +6,113 @@ local threads = require("jetbrainsai.threads")
 local edits = require("jetbrainsai.edits")
 
 local M = {}
-
 local last_response = ""
 
--- Highlight groups
-vim.api.nvim_set_hl(0, "JetBrainsTitle", { fg = "#aaaaff", bold = true })
-vim.api.nvim_set_hl(0, "JetBrainsAccept", { fg = "#00FF00", bold = true })
-vim.api.nvim_set_hl(0, "JetBrainsDeny", { fg = "#FF4444", bold = true })
+-- Highlights
+vim.api.nvim_set_hl(0, "JBHeader", { fg = "#89b4fa", bold = true })
+vim.api.nvim_set_hl(0, "JBAction", { fg = "#a6e3a1", italic = true })
+vim.api.nvim_set_hl(0, "JBPrompt", { fg = "#f9e2af", italic = true })
+vim.api.nvim_set_hl(0, "JBStream", { fg = "#cba6f7" })
+
+-- Emoji spinner
+local spinner_frames = { "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔" }
 
 function M.chat_prompt()
   vim.cmd("vsplit")
+  vim.cmd("vertical resize 40")
+
   local win = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_win_set_buf(win, bufnr)
+  vim.wo[win].wrap = true
   vim.bo[bufnr].filetype = "jetbrainsai"
-  vim.bo[bufnr].modifiable = true
-  -- After creating window and buffer:
-  vim.bo[bufnr].wrap = true
-  vim.bo[bufnr].syntax = "markdown"
-  vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
-  vim.highlight.range(bufnr, ns, "JetBrainsPrompt", {input_row, 0}, {input_row, -1})
 
   local lines = {
-    "🧠 Model: " .. (config.model or "gpt-4"),
+    "💡 JetBrains AI Assistant 🚀",
+    "────────────────────────────────────",
+    "📦 Model: " .. (config.model or "gpt-4"),
     "📊 Quota: " .. (config.quota or "untracked"),
-    "────────────────────────────────────────────",
-    "[ Send ]    [ Accept ]    [ Deny ]",
+    "",
+    "🧠 [Send]   ✅ [Accept]   ❌ [Deny]",
     "",
     "💬 Prompt:",
     "",
-    "> ", -- Prompt input line (editable!)
+    "> ", -- editable line
     "",
-    "🧠 Response:",
+    "🧠 Response:"
   }
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  local ns = vim.api.nvim_create_namespace("jb-ai")
+  vim.highlight.range(bufnr, ns, "JBHeader", {0, 0}, {0, -1})
+  vim.highlight.range(bufnr, ns, "JBAction", {5, 0}, {5, -1})
+  vim.highlight.range(bufnr, ns, "JBPrompt", {9, 0}, {9, -1})
 
-  -- Highlights using modern API
-  local ns = vim.api.nvim_create_namespace("jetbrainsai-ui")
-  vim.highlight.range(bufnr, ns, "JetBrainsTitle", { 0, 0 }, { 0, -1 })
-  vim.highlight.range(bufnr, ns, "JetBrainsAccept", { 3, 13 }, { 3, 22 })
-  vim.highlight.range(bufnr, ns, "JetBrainsDeny", { 3, 27 }, { 3, 34 })
+  local input_row = 9
+  vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
 
-  -- Track where prompt input lives
-  local input_row = 7
+  local function stream_response(bufnr, start, data)
+    local lines = vim.split(data, "\n")
+    local i = 0
+    local frame = 1
+
+    local timer = vim.loop.new_timer()
+    timer:start(0, 60, vim.schedule_wrap(function()
+      if i >= #lines then
+        timer:stop()
+        timer:close()
+        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "🔔 All done! 🎯" })
+        return
+      end
+
+      local prefix = spinner_frames[frame]
+      local line = prefix .. " " .. lines[i + 1]
+      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { line })
+      vim.api.nvim_buf_add_highlight(bufnr, ns, "JBStream", start + i, 0, -1)
+
+      i = i + 1
+      frame = (frame % #spinner_frames) + 1
+    end))
+  end
 
   local function send_prompt()
-    local line = vim.api.nvim_buf_get_lines(bufnr, input_row, input_row + 1, false)[1]
+    local line = vim.api.nvim_buf_get_lines(bufnr, input_row + 1, input_row + 2, false)[1] or ""
     local prompt = line:gsub("^%s*>%s*", "")
-    if prompt == "" then
-      return
-    end
+    if prompt == "" then return end
 
     chat.send(prompt, function(reply)
       last_response = reply
-      local response_lines = vim.split(reply, "\n")
+      threads.append(prompt, reply)
+
       local start_line = input_row + 3
-      vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, response_lines)
+      vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, { "⏳ Thinking..." })
+      stream_response(bufnr, start_line, reply)
+
+      -- Clear input
+      vim.api.nvim_buf_set_lines(bufnr, input_row + 1, input_row + 2, false, { "> " })
+      vim.api.nvim_win_set_cursor(win, {input_row + 1, 2})
     end)
   end
 
   local function accept()
     if last_response ~= "" then
       edits.inject_response(last_response)
-      vim.notify("✅ Accepted", vim.log.levels.INFO)
+      vim.notify("✅ Accepted and inserted!", vim.log.levels.INFO)
     end
   end
 
   local function deny()
     edits.reject()
-    vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, {})
+    vim.api.nvim_buf_set_lines(bufnr, input_row + 3, -1, false, { "❌ Response cleared." })
   end
 
-  -- Keymap: <CR> sends prompt in normal & insert mode
+  -- 🎛 Keymaps
   vim.keymap.set("n", "<CR>", send_prompt, { buffer = bufnr })
-  vim.keymap.set("i", "<CR>", function()
+  vim.keymap.set("i", "<C-s>", function()
     vim.api.nvim_input("<Esc>")
     vim.schedule(send_prompt)
   end, { buffer = bufnr })
 
-  -- Accept/Deny via keymap
   vim.keymap.set("n", "<leader>ja", accept, { buffer = bufnr })
   vim.keymap.set("n", "<leader>jd", deny, { buffer = bufnr })
 end
@@ -99,7 +126,7 @@ function M.setup_tokens()
           vim.notify("🔐 Tokens encrypted", vim.log.levels.INFO)
         else
           proxy.set_tokens(jwt, bearer)
-          vim.notify("⚠️ Tokens stored in memory", vim.log.levels.WARN)
+          vim.notify("⚠️ Stored in memory only", vim.log.levels.WARN)
         end
       end)
     end)
@@ -114,7 +141,7 @@ function M.logout_tokens()
 end
 
 function M.init()
-  vim.keymap.set("n", config.chat_key, M.chat_prompt, { desc = "JetBrains AI: Chat Split" })
+  vim.keymap.set("n", config.chat_key, M.chat_prompt, { desc = "JetBrains AI Chat Split" })
   vim.keymap.set("n", config.setup_key, M.setup_tokens, { desc = "Setup Tokens" })
   vim.keymap.set("n", config.logout_key, M.logout_tokens, { desc = "Clear Tokens" })
 
@@ -124,3 +151,4 @@ function M.init()
 end
 
 return M
+
