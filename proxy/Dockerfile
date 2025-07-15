@@ -8,14 +8,14 @@ RUN apk add --no-cache git && \
 
 # Install Lua and LuaRocks dependencies
 RUN apk add --no-cache \
-	lua5.4 lua5.4-dev \
+	lua5.1 lua5.1-dev \
 	gcc make musl-dev \
 	curl unzip git
 
 # Install LuaRocks
 RUN curl -L https://luarocks.org/releases/luarocks-3.9.2.tar.gz | tar zx && \
 	cd luarocks-3.9.2 && \
-	./configure --with-lua-include=/usr/include/lua5.4 && \
+	./configure --with-lua-include=/usr/include/lua5.1 && \
 	make && make install && \
 	cd .. && rm -rf luarocks-3.9.2
 
