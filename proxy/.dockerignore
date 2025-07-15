@@ -1,5 +1,5 @@
 # Ignore everything
-**
+# **
 
 # But include only what we need for the build
 !Dockerfile
