@@ -74,7 +74,6 @@ cd nvim-jetbrainsai-proxy/proxy
 __Step 2:__ Install dependencies and validate your setup
 
 ```bash
-pip install -r requirements.txt  # If you list any
 make verify
 make bootstrap
 ```
