@@ -10,11 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Lua
-        uses: leafo/gh-actions-lua@v11
-
-      - name: Install Luacheck
-        run: luarocks install luacheck
+      - name: Check luarocks install
+        run: luarocks --version
 
       - name: Run Luacheck
         run: luacheck lua
