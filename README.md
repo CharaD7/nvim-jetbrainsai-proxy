@@ -1,7 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Neovim Plugin](https://img.shields.io/badge/built%20for-Neovim-57a143?logo=neovim)](https://neovim.io)
 [![Stars](https://img.shields.io/github/stars/CharaD7/nvim-jetbrainsai-proxy.svg?style=social)](https://github.com/yourgithub/nvim-jetbrainsai-proxy)
-[![CI](https://github.com/your-org/your-repo/actions/workflows/docker-build.yml/badge.svg)](https://github.com/your-org/your-repo/actions)
+[![CI](https://github.com/CharaD7/nvim-jetbrainsai-proxy/actions/workflows/docker-build.yml/badge.svg)](https://github.com/your-org/your-repo/actions)
 
 # 🧠 nvim-jetbrainsai-proxy
 
