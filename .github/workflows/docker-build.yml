@@ -2,8 +2,7 @@ name: 🔧 JetBrains Proxy CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
 
 jobs:
@@ -30,15 +29,15 @@ jobs:
 
       - name: 🔍 Run one-shot verifier
         id: verify
-        continue-on-error: true
         run: |
-          python3 scripts/verify-build-ready.py 2>error.log || true
+          set -e
+          python3 scripts/verify-build-ready.py 2>error.log
           echo "msg<<EOF" >> $GITHUB_OUTPUT
           cat error.log >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: 💬 Post comment on PR (if verifier fails)
-        if: steps.verify.outcome == 'failure'
+        if: failure()
         uses: actions/github-script@v7
         with:
           script: |
@@ -62,17 +61,14 @@ jobs:
               body: message
             })
 
-      - name: 🛠️ Build Docker image (only if verifier succeeds)
-        if: steps.verify.outcome == 'success'
+      - name: 🛠️ Build Docker image
+        if: success()
         run: make build
 
       - name: 🔍 Check config.example.yaml format
         run: |
-          cp config.example.yaml config.yaml  # Used as dummy for CI
+          cp config.example.yaml config.yaml
           make check-config
-
-      - name: 🛠️ Build Docker image
-        run: make build
 
   proxy-test:
     runs-on: ubuntu-latest
@@ -94,3 +90,4 @@ jobs:
       - name: 🚦 Test proxy endpoint
         run: |
           curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 | grep -q 200 && echo "✅ Proxy is responsive." || (echo "❌ Proxy did not start." && exit 1)
+
