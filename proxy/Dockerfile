@@ -7,7 +7,7 @@ RUN git clone https://github.com/zouyq/jetbrains-ai-proxy.git . && \
 	go build -o jetbrains-ai-proxy main.go
 
 # Stage 2: Runtime with Lua tools
-FROM lua-base:5.1
+FROM lua-base:5.3
 
 WORKDIR /app
 COPY --from=builder /app/jetbrains-ai-proxy .
