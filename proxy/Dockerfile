@@ -10,16 +10,16 @@ RUN apk add --no-cache git && \
 RUN apk add --no-cache bash curl git make gcc musl-dev findutils
 
 # Check if Lua exists, else install 5.1.5
-RUN if ! command -v lua >/dev/null 2>&1; then \
-		echo "🔍 Lua not found. Installing Lua 5.1.5..." && \
-		apk add --no-cache lua5.1 lua5.1-dev; \
-	else \
-		echo "✅ Lua already installed: $(lua -v)"; \
-	fi
+RUN curl -L https://luarocks.org/releases/luarocks-3.9.2.tar.gz | tar zx && \
+	cd luarocks-3.9.2 && \
+	./configure --with-lua-include=$(find /usr/include -type d -name "lua*" | grep -E 'lua[0-9\.]*$' | head -n 1) && \
+	make && make install && \
+	cd .. && rm -rf luarocks-3.9.2
 
 # Detect Lua include path
 RUN LUA_INCLUDE=$(find /usr/include -type d -name "lua*" | grep -E 'lua[0-9\.]*$' | head -n 1) && \
 	echo "📦 Detected Lua include path: $LUA_INCLUDE" && \
+	test -d "$LUA_INCLUDE" && \
 	curl -L https://luarocks.org/releases/luarocks-3.9.2.tar.gz | tar zx && \
 	cd luarocks-3.9.2 && \
 	./configure --with-lua-include=$LUA_INCLUDE && \
