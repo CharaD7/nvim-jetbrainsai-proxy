@@ -6,7 +6,7 @@ PORT := 8080
 CONFIG := config.yaml
 TABS := check-makefile-tabs.sh
 
-.PHONY: build run clean logs check-config mitmproxy bootstrap gen-config
+.PHONY: build run clean logs check-config check-tabs mitmproxy verify bootstrap gen-config
 
 build:
   @echo "📦 Building $(IMAGE_NAME) with $(CONTAINER_ENGINE)..."
