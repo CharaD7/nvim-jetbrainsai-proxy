@@ -1,24 +1,30 @@
 FROM alpine:3.18
 
 LABEL maintainer="Joy"
-LABEL description="Lua 5.1 + LuaRocks base for Neovim proxy tools"
+LABEL description="Lua 5.3 base image with LuaRocks and offline Luacheck support"
 
+# ⛏️ Install dependencies
 RUN apk add --no-cache \
-	bash curl git make gcc musl-dev \
-	lua5.1 lua5.1-dev
+	bash curl git make gcc musl-dev unzip \
+	lua5.3 lua5.3-dev
 
-# Validate headers
-RUN test -f /usr/include/lua.h && echo "✅ Lua headers found"
+# ✅ Validate headers exist
+RUN test -f /usr/include/lua5.3/lua.h && echo "✅ Lua 5.3 headers found"
 
-# Install LuaRocks
-RUN curl -L https://luarocks.org/releases/luarocks-3.9.2.tar.gz | tar zx && \
-	cd luarocks-3.9.2 && \
-	./configure --with-lua-include=/usr/include && \
+# 📁 Copy local LuaRocks module files (manifest + .rockspec + .rock)
+COPY docker/luarocks-server /luarocks-server
+
+# 📦 Install LuaRocks
+RUN curl -L https://luarocks.org/releases/luarocks-3.12.2.tar.gz | tar zx && \
+	cd luarocks-3.12.2 && \
+	./configure --with-lua-include=/usr/include/lua5.3 && \
 	make && make install && \
-	cd .. && rm -rf luarocks-3.9.2
+	cd .. && rm -rf luarocks-3.12.2
 
-# Optional: Luacheck
-RUN luarocks install luacheck
+# 📥 Install Luacheck from local server
+RUN luarocks install luacheck \
+	--server=/luarocks-server \
+	--lua-version=5.3
 
-CMD ["lua"]
+CMD ["lua5.3"]
 
