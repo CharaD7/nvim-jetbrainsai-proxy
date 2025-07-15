@@ -30,7 +30,7 @@ check-config:
 
 check-tabs:
 	@echo "🔍 Validating $(TABS)..."
-	@scripts/$(TABS) || echo "❌ Makefile contains spaces instead of tabs.")
+	@bash proxy/scripts/$(TABS) || echo "❌ Makefile contains tabs instead of spaces. Please fix it."
 
 mitmproxy:
 	@echo "🕵️ Starting mitmproxy on port 8081..."
