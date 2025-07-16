@@ -2,12 +2,12 @@ FROM alpine:3.18
 
 RUN apk add --no-cache \
 	bash curl git make gcc musl-dev unzip \
-	lua5.3 lua5.3-dev python3 py3-pip \
-	build-base \
-	libffi-dev \
-	openssl-dev \
-	cargo \
-	rust
+	lua5.3 lua5.3-dev python3 python3-dev py3-pip \
+	build-base libffi-dev openssl-dev \
+	cargo rust
+
+# Test for python headers
+RUN test -f /usr/include/python3.11/Python.h && echo "✅ Python headers found"
 
 # Copy local LuaRocks server
 COPY docker/luarocks-server /luarocks-server
