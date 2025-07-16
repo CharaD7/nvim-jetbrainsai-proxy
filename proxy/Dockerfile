@@ -19,3 +19,8 @@ RUN luarocks install luacheck \
   --server=/luarocks-server \
   --lua-version=5.3
 
+RUN pip install mitmproxy
+
+EXPOSE 8084
+
+CMD ["mitmproxy", "--mode", "regular", "--listen-port", "8084"]
