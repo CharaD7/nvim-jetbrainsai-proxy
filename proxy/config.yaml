@@ -1,0 +1,4 @@
+tokens:
+  - jwt: "your-grazie-authenticate-jwt-token-here"
+    bearer: ""
+
