@@ -87,23 +87,19 @@ jobs:
   proxy-test:
     runs-on: ubuntu-latest
     needs: build-proxy
-    services:
-      proxy:
-        image: charad7/jetbrains-proxy:latest
-        options: --name proxy
-        ports:
-          - 8080:8080
 
     steps:
-      # Inspect running containers
-      - name: 🐳 List running containers
-        run: docker ps -a
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐳 Start proxy container
+        run: docker run -d --name proxy -p 8080:8080 charad7/jetbrains-proxy:latest
 
       - name: ⏳ Wait for proxy startup
         run: |
           echo "Waiting for proxy on port 8080..."
           for i in {1..15}; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" http://proxy:8080 || echo "000")
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 || echo "000")
             if [ "$status" = "200" ]; then
               echo "✅ Proxy is responsive."
               exit 0
@@ -115,8 +111,4 @@ jobs:
 
       - name: 📜 Show proxy logs
         run: docker logs proxy || echo "No logs found"
-
-      - name: 🚦 Test proxy endpoint
-        run: |
-          curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 | grep -q 200 && echo "✅ Proxy is responsive." || (echo "❌ Proxy did not start." && exit 1)
 
