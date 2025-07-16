@@ -103,7 +103,7 @@ jobs:
         run: |
           echo "Waiting for proxy on port 8080..."
           for i in {1..15}; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 || echo "000")
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://proxy:8080 || echo "000")
             if [ "$status" = "200" ]; then
               echo "✅ Proxy is responsive."
               exit 0
@@ -112,6 +112,9 @@ jobs:
           done
           echo "❌ Proxy did not start after waiting."
           exit 1
+
+      - name: 📜 Show proxy logs
+        run: docker logs proxy || echo "No logs found"
 
       - name: 🚦 Test proxy endpoint
         run: |
