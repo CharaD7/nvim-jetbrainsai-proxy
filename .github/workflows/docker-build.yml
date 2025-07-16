@@ -89,7 +89,8 @@ jobs:
     needs: build-proxy
     services:
       proxy:
-        image: jetbrains-proxy
+        image: charad7/jetbrains-proxy:latest
+        options: --name proxy
         ports:
           - 8080:8080
 
