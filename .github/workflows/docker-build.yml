@@ -93,13 +93,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🐳 Start proxy container
-        run: docker run -d --name proxy -p 8080:8080 charad7/jetbrains-proxy:latest
+        run: docker run -d --name proxy -p 8084:8084 charad7/jetbrains-proxy:latest
 
       - name: ⏳ Wait for proxy startup
         run: |
-          echo "Waiting for proxy on port 8080..."
+          echo "Waiting for proxy on port 8084..."
           for i in {1..15}; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 || echo "000")
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8084 || echo "000")
             if [ "$status" = "200" ]; then
               echo "✅ Proxy is responsive."
               exit 0
