@@ -95,12 +95,23 @@ jobs:
           - 8080:8080
 
     steps:
+      # Inspect running containers
+      - name: 🐳 List running containers
+        run: docker ps -a
+
       - name: ⏳ Wait for proxy startup
         run: |
           echo "Waiting for proxy on port 8080..."
-          for i in {1..10}; do
-            nc -z localhost 8080 && break || sleep 2
+          for i in {1..15}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 || echo "000")
+            if [ "$status" = "200" ]; then
+              echo "✅ Proxy is responsive."
+              exit 0
+            fi
+            sleep 2
           done
+          echo "❌ Proxy did not start after waiting."
+          exit 1
 
       - name: 🚦 Test proxy endpoint
         run: |
