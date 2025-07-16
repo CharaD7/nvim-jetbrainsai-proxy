@@ -1,18 +1,21 @@
-# Stage 1: Build Go proxy
-FROM golang:1.24-alpine AS builder
+FROM alpine:3.18
 
-WORKDIR /app
-RUN apk add --no-cache git
-RUN git clone https://github.com/zouyq/jetbrains-ai-proxy.git . && \
-	go build -o jetbrains-ai-proxy main.go
+RUN apk add --no-cache \
+  bash curl git make gcc musl-dev unzip \
+  lua5.3 lua5.3-dev
 
-# Stage 2: Runtime with Lua tools
-FROM lua-base:5.1
+# Copy local LuaRocks server
+COPY luarocks-server /luarocks-server
 
-WORKDIR /app
-COPY --from=builder /app/jetbrains-ai-proxy .
-COPY config.yaml .
+# Install LuaRocks
+RUN curl -L https://luarocks.org/releases/luarocks-3.12.2.tar.gz | tar zx && \
+  cd luarocks-3.12.2 && \
+  ./configure --with-lua-include=/usr/include/lua5.3 && \
+  make && make install && \
+  cd .. && rm -rf luarocks-3.12.2
 
-EXPOSE 8080
-CMD ["./jetbrains-ai-proxy", "--config", "./config.yaml"]
+# Install Luacheck from local server
+RUN luarocks install luacheck \
+  --server=/luarocks-server \
+  --lua-version=5.3
 
