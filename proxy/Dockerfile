@@ -2,7 +2,7 @@ FROM alpine:3.18
 
 RUN apk add --no-cache \
   bash curl git make gcc musl-dev unzip \
-  lua5.3 lua5.3-dev
+  lua5.3 lua5.3-dev python3 py3-pip
 
 # Copy local LuaRocks server
 COPY docker/luarocks-server /luarocks-server
