@@ -81,7 +81,7 @@ jobs:
 
       - name: 🔍 Check config.example.yaml format
         run: |
-          cp proxy/config.example.yaml config.yaml
+          cp config.example.yaml config.yaml
           make check-config
 
   proxy-test:
