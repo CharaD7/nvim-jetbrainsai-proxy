@@ -36,12 +36,22 @@ jobs:
           cat error.log >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: 💬 Post comment on PR (if verifier fails)
+      - name: 💬 Post comment on PR or issue (if verifier fails)
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
-            const author = context.payload.pull_request?.user?.login || "contributor"
+            const isPR = Boolean(context.payload.pull_request);
+            const issueNumber = isPR
+              ? context.payload.pull_request.number
+              : context.issue?.number;
+
+            if (!issueNumber) {
+              console.log("🛑 No valid issue or PR context — skipping comment.");
+              return;
+            }
+
+            const author = context.payload.pull_request?.user?.login || "contributor";
             const message = `🔴 **Build verification failed** for @${author}
 
             \`\`\`
@@ -53,13 +63,14 @@ jobs:
             - The file doesn’t contain a valid \`tokens\` array with a \`jwt\`
             - Dockerfile may be missing \`COPY config.yaml\`
 
-            💡 Tip: run \`make verify\` locally before pushing. Let us know if you need help. 💙`
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            💡 Tip: run \`make verify\` locally before pushing. Let us know if you need help. 💙`;
+
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
+              issue_number: issueNumber,
               body: message
-            })
+            });
 
       - name: 🧪 Validate Makefile indentation
         run: make check-tabs
